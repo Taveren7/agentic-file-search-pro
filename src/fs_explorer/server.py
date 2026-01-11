@@ -17,13 +17,14 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from .workflow import (
-    workflow,
+    FsExplorerWorkflow,
     InputEvent,
     ToolCallEvent,
     GoDeeperEvent,
     AskHumanEvent,
     HumanAnswerEvent,
     ExplorationEndEvent,
+    WORKFLOW_TIMEOUT_SECONDS,
 )
 from .agent import FsExplorerAgent
 
@@ -129,13 +130,16 @@ async def websocket_explore(websocket: WebSocket):
             "data": {"task": task, "folder": str(folder_path)}
         })
         
+        # Instantiate and configure workflow for this session
+        workflow = FsExplorerWorkflow(timeout=WORKFLOW_TIMEOUT_SECONDS)
+        workflow.agent = agent
+
         # Run the workflow
         step_number = 0
         handler = workflow.run(
             start_event=InputEvent(
                 task=task,
                 base_directory=str(folder_path),
-                agent=agent
             )
         )
         
