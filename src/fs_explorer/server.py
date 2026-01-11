@@ -132,8 +132,11 @@ async def websocket_explore(websocket: WebSocket):
         # Run the workflow
         step_number = 0
         handler = workflow.run(
-            start_event=InputEvent(task=task, base_directory=str(folder_path)),
-            agent=agent
+            start_event=InputEvent(
+                task=task,
+                base_directory=str(folder_path),
+                agent=agent
+            )
         )
         
         async for event in handler.stream_events():

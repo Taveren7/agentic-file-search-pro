@@ -27,17 +27,21 @@ from .fs import describe_dir_content
 
 class WorkflowState(BaseModel):
     """State maintained throughout the workflow execution."""
+    model_config = {"arbitrary_types_allowed": True}
     
     initial_task: str = ""
     base_directory: str = "."
     current_directory: str = "."
+    agent: FsExplorerAgent | None = None
 
 
 class InputEvent(StartEvent):
     """Initial event containing the user's task and base directory."""
+    model_config = {"arbitrary_types_allowed": True}
     
     task: str
     base_directory: str = "."
+    agent: FsExplorerAgent
 
 
 class GoDeeperEvent(Event):
@@ -172,13 +176,15 @@ class FsExplorerWorkflow(Workflow):
         self,
         ev: InputEvent,
         ctx: Context[WorkflowState],
-        agent: FsExplorerAgent,
     ) -> WorkflowEvent:
         """Initialize exploration with the user's task."""
         async with ctx.store.edit_state() as state:
             state.initial_task = ev.task
             state.base_directory = ev.base_directory
             state.current_directory = ev.base_directory
+            state.agent = ev.agent
+        
+        agent = ev.agent
         
         dirdescription = describe_dir_content(ev.base_directory)
         agent.configure_task(
@@ -195,10 +201,10 @@ class FsExplorerWorkflow(Workflow):
         self,
         ev: GoDeeperEvent,
         ctx: Context[WorkflowState],
-        agent: FsExplorerAgent,
     ) -> WorkflowEvent:
         """Handle navigation into a subdirectory."""
         state = await ctx.store.get_state()
+        agent = state.agent
         dirdescription = describe_dir_content(state.current_directory)
         
         agent.configure_task(
@@ -215,10 +221,10 @@ class FsExplorerWorkflow(Workflow):
         self,
         ev: HumanAnswerEvent,
         ctx: Context[WorkflowState],
-        agent: FsExplorerAgent,
     ) -> WorkflowEvent:
         """Process the human's response to a question."""
         state = await ctx.store.get_state()
+        agent = state.agent
         
         agent.configure_task(
             f"Human response to your question: {ev.response}\n\n"
@@ -233,9 +239,10 @@ class FsExplorerWorkflow(Workflow):
         self,
         ev: ToolCallEvent,
         ctx: Context[WorkflowState],
-        agent: FsExplorerAgent,
     ) -> WorkflowEvent:
         """Process the result of a tool call."""
+        state = await ctx.store.get_state()
+        agent = state.agent
         agent.configure_task(
             "Given the result from the tool call you just performed, "
             "what action should you take next?"
