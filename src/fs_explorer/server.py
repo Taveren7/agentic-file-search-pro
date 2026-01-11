@@ -114,7 +114,14 @@ async def websocket_explore(websocket: WebSocket):
             return
         
         # Instantiate agent for this session
-        agent = FsExplorerAgent(base_directory=str(folder_path))
+        try:
+            agent = FsExplorerAgent(base_directory=str(folder_path))
+        except ValueError as e:
+            await websocket.send_json({
+                "type": "error",
+                "data": {"message": str(e)}
+            })
+            return
         
         # Send start event
         await websocket.send_json({
