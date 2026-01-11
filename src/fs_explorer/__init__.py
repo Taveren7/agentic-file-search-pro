@@ -14,7 +14,6 @@ Example usage:
 
 from .agent import FsExplorerAgent, TokenUsage
 from .workflow import (
-    workflow,
     FsExplorerWorkflow,
     InputEvent,
     ExplorationEndEvent,
@@ -30,7 +29,6 @@ __all__ = [
     "FsExplorerAgent",
     "TokenUsage",
     # Workflow
-    "workflow",
     "FsExplorerWorkflow",
     "InputEvent",
     "ExplorationEndEvent",

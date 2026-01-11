@@ -18,15 +18,15 @@ from rich.table import Table
 from rich.text import Text
 
 from .workflow import (
-    workflow,
+    FsExplorerWorkflow,
     InputEvent,
     ToolCallEvent,
     GoDeeperEvent,
     AskHumanEvent,
     HumanAnswerEvent,
-    get_agent,
-    reset_agent,
+    WORKFLOW_TIMEOUT_SECONDS,
 )
+from .agent import FsExplorerAgent
 
 app = Typer()
 
@@ -176,8 +176,14 @@ async def run_workflow(task: str) -> None:
     """
     console = Console()
     
-    # Reset agent for fresh state
-    reset_agent()
+    # Instantiate agent and workflow
+    try:
+        agent = FsExplorerAgent()
+        workflow = FsExplorerWorkflow(timeout=WORKFLOW_TIMEOUT_SECONDS)
+        workflow.agent = agent
+    except ValueError as e:
+        console.print(f"[bold red]Error initializing agent: {e}[/]")
+        return
     
     # Print header
     print_workflow_header(console, task)
@@ -265,7 +271,6 @@ async def run_workflow(task: str) -> None:
         console.print(error_panel)
     
     # Print workflow summary
-    agent = get_agent()
     print_workflow_summary(console, agent, step_number)
 
 
