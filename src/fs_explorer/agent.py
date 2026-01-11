@@ -237,28 +237,19 @@ User asks: "What is the purchase price?"
 # Agent Implementation
 # =============================================================================
 
-class FsExplorerAgent:
-    """
-    AI agent for exploring filesystems using Google Gemini.
-    
-    The agent maintains a conversation history with the LLM and uses
-    structured JSON output to make decisions about which actions to take.
-    
-    Attributes:
-        token_usage: Tracks API call statistics and costs.
-    """
-    
-    def __init__(self, api_key: str | None = None) -> None:
+    def __init__(self, api_key: str | None = None, base_directory: str = ".") -> None:
         """
-        Initialize the agent with Google API credentials.
+        Initialize the agent with Google API credentials and a base directory.
         
         Args:
             api_key: Google API key. If not provided, reads from
                      GOOGLE_API_KEY environment variable.
+            base_directory: The root directory for all filesystem operations.
         
         Raises:
             ValueError: If no API key is available.
         """
+        self.base_directory = Path(base_directory).resolve()
         if api_key is None:
             api_key = os.getenv("GOOGLE_API_KEY")
         if api_key is None:
@@ -335,8 +326,16 @@ class FsExplorerAgent:
             tool_name: Name of the tool to execute.
             tool_input: Dictionary of arguments to pass to the tool.
         """
+        # Resolve paths in tool_input relative to base_directory
+        resolved_input = tool_input.copy()
+        for key in ["file_path", "directory"]:
+            if key in resolved_input:
+                path = Path(resolved_input[key])
+                if not path.is_absolute():
+                    resolved_input[key] = str(self.base_directory / path)
+
         try:
-            result = TOOLS[tool_name](**tool_input)
+            result = TOOLS[tool_name](**resolved_input)
         except Exception as e:
             result = (
                 f"An error occurred while calling tool {tool_name} "

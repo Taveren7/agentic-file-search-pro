@@ -22,35 +22,22 @@ from .agent import FsExplorerAgent
 from .models import GoDeeperAction, ToolCallAction, StopAction, AskHumanAction, Action
 from .fs import describe_dir_content
 
-# Lazy agent initialization - created on first access
-_AGENT: FsExplorerAgent | None = None
-
-
-def get_agent() -> FsExplorerAgent:
-    """Get or create the singleton agent instance."""
-    global _AGENT
-    if _AGENT is None:
-        _AGENT = FsExplorerAgent()
-    return _AGENT
-
-
-def reset_agent() -> None:
-    """Reset the agent instance (useful for testing)."""
-    global _AGENT
-    _AGENT = None
+# No global agent - instance-based workflow
 
 
 class WorkflowState(BaseModel):
     """State maintained throughout the workflow execution."""
     
     initial_task: str = ""
+    base_directory: str = "."
     current_directory: str = "."
 
 
 class InputEvent(StartEvent):
-    """Initial event containing the user's task."""
+    """Initial event containing the user's task and base directory."""
     
     task: str
+    base_directory: str = "."
 
 
 class GoDeeperEvent(Event):
@@ -190,10 +177,12 @@ class FsExplorerWorkflow(Workflow):
         """Initialize exploration with the user's task."""
         async with ctx.store.edit_state() as state:
             state.initial_task = ev.task
+            state.base_directory = ev.base_directory
+            state.current_directory = ev.base_directory
         
-        dirdescription = describe_dir_content(".")
+        dirdescription = describe_dir_content(ev.base_directory)
         agent.configure_task(
-            f"Given that the current directory ('.') looks like this:\n\n"
+            f"Given that the current directory ('{ev.base_directory}') looks like this:\n\n"
             f"```text\n{dirdescription}\n```\n\n"
             f"And that the user is giving you this task: '{ev.task}', "
             f"what action should you take first?"
@@ -206,7 +195,7 @@ class FsExplorerWorkflow(Workflow):
         self,
         ev: GoDeeperEvent,
         ctx: Context[WorkflowState],
-        agent: Annotated[FsExplorerAgent, Resource(get_agent)],
+        agent: FsExplorerAgent,
     ) -> WorkflowEvent:
         """Handle navigation into a subdirectory."""
         state = await ctx.store.get_state()
@@ -226,7 +215,7 @@ class FsExplorerWorkflow(Workflow):
         self,
         ev: HumanAnswerEvent,
         ctx: Context[WorkflowState],
-        agent: Annotated[FsExplorerAgent, Resource(get_agent)],
+        agent: FsExplorerAgent,
     ) -> WorkflowEvent:
         """Process the human's response to a question."""
         state = await ctx.store.get_state()
@@ -244,7 +233,7 @@ class FsExplorerWorkflow(Workflow):
         self,
         ev: ToolCallEvent,
         ctx: Context[WorkflowState],
-        agent: Annotated[FsExplorerAgent, Resource(get_agent)],
+        agent: FsExplorerAgent,
     ) -> WorkflowEvent:
         """Process the result of a tool call."""
         agent.configure_task(
