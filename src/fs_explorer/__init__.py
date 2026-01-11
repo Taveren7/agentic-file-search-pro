@@ -22,8 +22,6 @@ from .workflow import (
     GoDeeperEvent,
     AskHumanEvent,
     HumanAnswerEvent,
-    get_agent,
-    reset_agent,
 )
 from .models import Action, ActionType, Tools
 
@@ -40,8 +38,6 @@ __all__ = [
     "GoDeeperEvent",
     "AskHumanEvent",
     "HumanAnswerEvent",
-    "get_agent",
-    "reset_agent",
     # Models
     "Action",
     "ActionType",
