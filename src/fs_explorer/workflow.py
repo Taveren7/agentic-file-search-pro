@@ -172,7 +172,7 @@ class FsExplorerWorkflow(Workflow):
         self,
         ev: InputEvent,
         ctx: Context[WorkflowState],
-        agent: Annotated[FsExplorerAgent, Resource(get_agent)],
+        agent: FsExplorerAgent,
     ) -> WorkflowEvent:
         """Initialize exploration with the user's task."""
         async with ctx.store.edit_state() as state:
