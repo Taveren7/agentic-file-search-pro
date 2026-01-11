@@ -237,6 +237,17 @@ User asks: "What is the purchase price?"
 # Agent Implementation
 # =============================================================================
 
+class FsExplorerAgent:
+    """
+    AI agent for exploring filesystems using Google Gemini.
+    
+    The agent maintains a conversation history with the LLM and uses
+    structured JSON output to make decisions about which actions to take.
+    
+    Attributes:
+        token_usage: Tracks API call statistics and costs.
+    """
+    
     def __init__(self, api_key: str | None = None, base_directory: str = ".") -> None:
         """
         Initialize the agent with Google API credentials and a base directory.
