@@ -214,10 +214,15 @@ async def websocket_explore(websocket: WebSocket):
     except WebSocketDisconnect:
         pass
     except Exception as e:
-        await websocket.send_json({
-            "type": "error",
-            "data": {"message": str(e)}
-        })
+        import traceback
+        traceback.print_exc()
+        try:
+            await websocket.send_json({
+                "type": "error",
+                "data": {"message": str(e)}
+            })
+        except:
+            pass
     finally:
         pass
 
