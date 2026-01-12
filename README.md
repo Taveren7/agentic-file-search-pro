@@ -43,9 +43,14 @@
 
 2.  **Configure Environment**:
     Create a `.env` file in the root directory:
-    Or simply rename the `.env.example` file to `.env` and fill in the values.
     ```bash
     GOOGLE_API_KEY=your_actual_api_key_here
+    ```
+
+    **Alternative**: You can also export the key in your shell instead of using a file:
+    ```bash
+    export GOOGLE_API_KEY=your_key_here
+    docker-compose up
     ```
 
 3.  **Run with Docker**:
@@ -64,7 +69,7 @@
 1.  **Select Target**: Use the folder picker to select the directory you want to analyze (Docker mounts the current directory to `/app` by default).
 2.  **Ask a Question**:
     *   *Simple*: "Summarize the NDA in the contracts folder."
-    *   *Complex*: "Compare the payment terms in the detailed design doc vs the final invoice."
+    *   *Complex*: "Compare the payment terms in the Acquisition Agreement vs the Financial Adjustments."
 3.  **Watch it Work**: The agent will scan, preview, and deep-dive into files. It may even ask you follow-up questions if it gets stuck!
 
 ### CLI Mode (Optional)

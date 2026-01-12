@@ -265,5 +265,5 @@ class FsExplorerWorkflow(Workflow):
         return await _process_agent_action(agent, ctx, update_directory=True)
 
 
-# Workflow timeout for complex multi-document analysis (5 minutes)
-WORKFLOW_TIMEOUT_SECONDS = 300
+# Workflow timeout for complex multi-document analysis (10 minutes)
+WORKFLOW_TIMEOUT_SECONDS = 600
