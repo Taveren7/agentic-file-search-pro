@@ -60,8 +60,17 @@
     ```
     *Note: The first build may take a few minutes to compile OCR dependencies.*
 
-4.  **Access the UI**:
     Open your browser to: **http://localhost:8000**
+
+### 📂 Mounting Your Own Folders
+
+To explore folders outside of the project directory (e.g., your Documents or a separate data drive), you can "plug them in" via environment variables:
+
+1.  **Set the path**: Add this to your `.env` (or run it in your shell):
+    *   **Mac/Linux**: `HOST_DATA_PATH=/Users/yourname/Documents/Work`
+    *   **Windows**: `HOST_DATA_PATH=C:\Users\yourname\Desktop\ProjectData`
+2.  **Restart**: Run `docker-compose up -d`.
+3.  **Explore**: In the Web UI, you will see a folder named **`external_data`**. Open it to search your host files!
 
 ## 📖 Usage Guide
 

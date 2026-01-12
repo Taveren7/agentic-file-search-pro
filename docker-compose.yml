@@ -7,6 +7,7 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
+      - ${HOST_DATA_PATH:-./data}:/app/external_data
     env_file:
       - .env
     environment:
