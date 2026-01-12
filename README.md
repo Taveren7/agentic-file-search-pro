@@ -43,6 +43,7 @@
 
 2.  **Configure Environment**:
     Create a `.env` file in the root directory:
+    Or simply rename the `.env.example` file to `.env` and fill in the values.
     ```bash
     GOOGLE_API_KEY=your_actual_api_key_here
     ```
@@ -91,4 +92,4 @@ MIT License. See [LICENSE](LICENSE) for details.
 
 ---
 
-*Based on the original [fs-explorer](https://github.com/run-llama/fs-explorer) concept by LlamaIndex.*
+*Based on the original [fs-explorer](https://github.com/run-llama/fs-explorer) concept by LlamaIndex and the [agentic-file-search](https://github.com/PromtEngineer/agentic-file-search) implementation by PromptEngineer.*
