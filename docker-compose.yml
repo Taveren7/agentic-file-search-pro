@@ -7,7 +7,7 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
-    environment:
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
     env_file:
       - .env
+    environment:
+      - PYTHONPATH=/app/src

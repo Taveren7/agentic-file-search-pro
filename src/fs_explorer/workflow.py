@@ -6,6 +6,7 @@ exploration of the filesystem, handling tool calls, directory navigation,
 and human interaction.
 """
 
+from google.genai.errors import ClientError
 from workflows import Workflow, Context, step
 from workflows.events import (
     StartEvent,
@@ -27,21 +28,17 @@ from .fs import describe_dir_content
 
 class WorkflowState(BaseModel):
     """State maintained throughout the workflow execution."""
-    model_config = {"arbitrary_types_allowed": True}
     
     initial_task: str = ""
     base_directory: str = "."
     current_directory: str = "."
-    agent: FsExplorerAgent | None = None
 
 
 class InputEvent(StartEvent):
     """Initial event containing the user's task and base directory."""
-    model_config = {"arbitrary_types_allowed": True}
     
     task: str
     base_directory: str = "."
-    agent: FsExplorerAgent
 
 
 class GoDeeperEvent(Event):
@@ -72,11 +69,21 @@ class HumanAnswerEvent(HumanResponseEvent):
     response: str
 
 
+class WorkflowResult(BaseModel):
+    """Container for the final workflow result."""
+    final_result: str | None = None
+    error: str | None = None
+
+
 class ExplorationEndEvent(StopEvent):
     """Event signaling the end of exploration."""
     
     final_result: str | None = None
     error: str | None = None
+    
+    def __init__(self, final_result: str | None = None, error: str | None = None, **data: Any):
+        result = WorkflowResult(final_result=final_result, error=error)
+        super().__init__(result=result, final_result=final_result, error=error, **data)
 
 
 # Type alias for the union of possible workflow events
@@ -144,7 +151,13 @@ async def _process_agent_action(
     Returns:
         The appropriate workflow event
     """
-    result = await agent.take_action()
+    try:
+        result = await agent.take_action()
+    except Exception as e:
+        error_msg = str(e)
+        if "429" in error_msg:
+            return ExplorationEndEvent(error="⚠️ Google Gemini Rate Limit Exceeded. Please wait a minute and try again.")
+        return ExplorationEndEvent(error=f"AI Error: {error_msg}")
     
     if result is None:
         return ExplorationEndEvent(error="Could not produce action to take")
@@ -158,6 +171,8 @@ async def _process_agent_action(
             state.current_directory = godeeper.directory
     
     return _handle_action_result(action, action_type, ctx)
+
+
 
 
 class FsExplorerWorkflow(Workflow):
@@ -182,9 +197,8 @@ class FsExplorerWorkflow(Workflow):
             state.initial_task = ev.task
             state.base_directory = ev.base_directory
             state.current_directory = ev.base_directory
-            state.agent = ev.agent
         
-        agent = ev.agent
+        agent = self.agent
         
         dirdescription = describe_dir_content(ev.base_directory)
         agent.configure_task(
@@ -204,7 +218,7 @@ class FsExplorerWorkflow(Workflow):
     ) -> WorkflowEvent:
         """Handle navigation into a subdirectory."""
         state = await ctx.store.get_state()
-        agent = state.agent
+        agent = self.agent
         dirdescription = describe_dir_content(state.current_directory)
         
         agent.configure_task(
@@ -224,7 +238,7 @@ class FsExplorerWorkflow(Workflow):
     ) -> WorkflowEvent:
         """Process the human's response to a question."""
         state = await ctx.store.get_state()
-        agent = state.agent
+        agent = self.agent
         
         agent.configure_task(
             f"Human response to your question: {ev.response}\n\n"
@@ -241,8 +255,8 @@ class FsExplorerWorkflow(Workflow):
         ctx: Context[WorkflowState],
     ) -> WorkflowEvent:
         """Process the result of a tool call."""
-        state = await ctx.store.get_state()
-        agent = state.agent
+        # state = await ctx.store.get_state()
+        agent = self.agent
         agent.configure_task(
             "Given the result from the tool call you just performed, "
             "what action should you take next?"
@@ -253,5 +267,3 @@ class FsExplorerWorkflow(Workflow):
 
 # Workflow timeout for complex multi-document analysis (5 minutes)
 WORKFLOW_TIMEOUT_SECONDS = 300
-
-workflow = FsExplorerWorkflow(timeout=WORKFLOW_TIMEOUT_SECONDS)

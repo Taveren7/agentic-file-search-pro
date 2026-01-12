@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FsExplorer — AI Document Intelligence</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
     <style>
         :root {
             --bg-deep: #0f111a;
@@ -33,13 +36,14 @@
         body {
             font-family: 'Inter', sans-serif;
             background: var(--bg-deep);
-            background-image: 
+            background-image:
                 radial-gradient(at 0% 0%, rgba(61, 139, 255, 0.15) 0px, transparent 50%),
                 radial-gradient(at 100% 100%, rgba(255, 126, 51, 0.1) 0px, transparent 50%);
             color: var(--text-main);
             min-height: 100vh;
             line-height: 1.6;
-            overflow: hidden; /* Main page scroll is handled by sub-containers */
+            overflow: hidden;
+            /* Main page scroll is handled by sub-containers */
         }
 
         /* Glassmorphism utility */
@@ -66,7 +70,10 @@
                 overflow-y: auto;
                 height: auto;
             }
-            .sidebar { height: 500px; }
+
+            .sidebar {
+                height: 500px;
+            }
         }
 
         /* Sidebar - Execution Log */
@@ -111,8 +118,14 @@
             gap: 12px;
         }
 
-        .steps-viewport::-webkit-scrollbar { width: 6px; }
-        .steps-viewport::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        .steps-viewport::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .steps-viewport::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
 
         /* Step Card Styles */
         .step-card {
@@ -126,8 +139,15 @@
         }
 
         @keyframes slideIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .step-card::before {
@@ -140,11 +160,25 @@
             background: var(--accent-blue);
         }
 
-        .step-card.scan::before { background: var(--accent-blue); }
-        .step-card.preview::before { background: var(--accent-purple); }
-        .step-card.parse::before { background: var(--success); }
-        .step-card.search::before { background: var(--primary); }
-        .step-card.navigate::before { background: #facc15; }
+        .step-card.scan::before {
+            background: var(--accent-blue);
+        }
+
+        .step-card.preview::before {
+            background: var(--accent-purple);
+        }
+
+        .step-card.parse::before {
+            background: var(--success);
+        }
+
+        .step-card.search::before {
+            background: var(--primary);
+        }
+
+        .step-card.navigate::before {
+            background: #facc15;
+        }
 
         .step-info {
             display: flex;
@@ -241,9 +275,17 @@
         }
 
         @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
         }
 
         /* Input Area */
@@ -374,8 +416,13 @@
         }
 
         @keyframes indetMove {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(300%); }
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(300%);
+            }
         }
 
         /* Result Area */
@@ -407,8 +454,14 @@
             padding: 32px;
         }
 
-        .result-viewport::-webkit-scrollbar { width: 6px; }
-        .result-viewport::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        .result-viewport::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .result-viewport::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
 
         .empty-state {
             height: 100%;
@@ -557,8 +610,17 @@
             transition: var(--transition);
         }
 
-        .btn-primary { background: var(--primary); color: #fff; border: none; }
-        .btn-secondary { background: transparent; color: var(--text-main); border: 1px solid var(--border); }
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+        }
 
         /* Folder Picker Specific */
         .folder-list {
@@ -587,8 +649,15 @@
             background: rgba(255, 255, 255, 0.05);
         }
 
-        .folder-icon { color: var(--primary); font-size: 18px; }
-        .folder-name { font-size: 14px; font-weight: 500; }
+        .folder-icon {
+            color: var(--primary);
+            font-size: 18px;
+        }
+
+        .folder-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
 
         .folder-nav-bar {
             display: flex;
@@ -610,6 +679,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="app-container">
         <!-- Execution Log Sidebar -->
@@ -647,16 +717,15 @@
                         <button class="btn-browse" onclick="openFolderPicker()">Browse</button>
                     </div>
                     <div class="query-input-row">
-                        <input 
-                            type="text" 
-                            id="queryInput" 
-                            class="query-input" 
-                            placeholder="What would you like to know about your documents?"
-                            autocomplete="off"
-                        >
+                        <input type="text" id="queryInput" class="query-input"
+                            placeholder="What would you like to know about your documents?" autocomplete="off">
                         <button class="btn-execute" id="queryBtn" onclick="startExploration()">
                             <span>Execute</span>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
                         </button>
                     </div>
                     <div class="progress-container" id="progressContainer">
@@ -729,7 +798,8 @@
             <h2 class="modal-title">Select Directory</h2>
             <div class="modal-body">
                 <div class="folder-nav-bar">
-                    <button class="btn-browse" id="folderUpBtn" onclick="navigateUp()" style="padding: 6px 12px;">↑ Up</button>
+                    <button class="btn-browse" id="folderUpBtn" onclick="navigateUp()" style="padding: 6px 12px;">↑
+                        Up</button>
                     <div class="folder-current-path" id="folderModalPath">.</div>
                 </div>
                 <div class="folder-list" id="folderList">
@@ -801,7 +871,7 @@
             statsGrid.style.display = 'none';
             progressContainer.classList.add('active', 'indet');
             stepCountBadge.textContent = '0 STEPS';
-            
+
             updateStatus('Connecting', 'active');
 
             const wsUrl = `ws://${window.location.host}/ws/explore`;
@@ -814,8 +884,11 @@
 
             ws.onmessage = (e) => handleMessage(JSON.parse(e.data));
             ws.onerror = () => {
-                showError('Connection failed. Verify server status.');
-                finish();
+                // Only show error if we haven't finished successfully
+                if (isRunning) {
+                    showError('Connection failed. Verify server status.');
+                    finish();
+                }
             };
             ws.onclose = () => finish();
         }
@@ -842,10 +915,10 @@
 
         function addStep(data, style, isNav = false) {
             if (data.step === 1) stepsList.innerHTML = '';
-            
+
             stepCount = data.step;
             stepCountBadge.textContent = `${stepCount} ${stepCount === 1 ? 'STEP' : 'STEPS'}`;
-            
+
             const target = isNav ? data.directory : (data.tool_input.file_path || data.tool_input.directory || '');
             const name = isNav ? 'navigate' : data.tool_name;
 
@@ -886,7 +959,7 @@
 
             let text = data.final_result || 'Analysis complete with no summary.';
             text = text.replace(/\[Source:[^\]]+\]/g, m => `<span class="citation">${esc(m)}</span>`);
-            
+
             resultContent.innerHTML = `<div class="result-text">${text}</div>`;
 
             const s = data.stats;
@@ -901,6 +974,13 @@
             }
 
             updateStatus('Analysis Complete', '');
+
+            // Mark as finished successfully so subsequent close/error events don't trigger failure UI
+            isRunning = false;
+            queryBtn.disabled = false;
+            progressContainer.classList.remove('active', 'indet');
+            // We don't close WS here, let the server close it or onclose handle it, 
+            // but setting isRunning=false prevents onerror from showing alert.
         }
 
         function showError(msg) {
@@ -932,8 +1012,8 @@
         }
 
         function formatNum(n) {
-            if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
-            if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
+            if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+            if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
             return n;
         }
 
@@ -953,7 +1033,7 @@
             try {
                 const res = await fetch(`/api/folders?path=${encodeURIComponent(path)}`);
                 const data = await res.json();
-                
+
                 if (data.error) {
                     folderList.innerHTML = `<div class="empty-state" style="color: var(--error)"><p>${esc(data.error)}</p></div>`;
                     return;
@@ -1012,4 +1092,5 @@
         })();
     </script>
 </body>
+
 </html>

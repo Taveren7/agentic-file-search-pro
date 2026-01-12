@@ -136,43 +136,49 @@ async def websocket_explore(websocket: WebSocket):
 
         # Run the workflow
         step_number = 0
-        handler = workflow.run(
-            start_event=InputEvent(
-                task=task,
-                base_directory=str(folder_path),
-            )
-        )
-        
+        print("DEBUG: Starting workflow handler...", flush=True)
+        try:
+            handler = workflow.run(start_event=InputEvent(task=task, base_directory=str(folder_path)))
+        except Exception as e:
+            print(f"DEBUG: Error creating workflow handler: {e}", flush=True)
+            import traceback
+            traceback.print_exc()
+            raise
+
+        # Stream events
+        print("DEBUG: Streaming events...", flush=True)
         async for event in handler.stream_events():
+            print(f"DEBUG: Received event: {type(event)}", flush=True)
             if isinstance(event, ToolCallEvent):
+                print(f"DEBUG: Streaming ToolCallEvent: {event.tool_name}", flush=True)
                 step_number += 1
                 await websocket.send_json({
                     "type": "tool_call",
                     "data": {
-                        "step": step_number,
                         "tool_name": event.tool_name,
                         "tool_input": event.tool_input,
                         "reason": event.reason,
+                        "step": step_number
                     }
                 })
                 
             elif isinstance(event, GoDeeperEvent):
+                print("DEBUG: Streaming GoDeeperEvent", flush=True)
                 step_number += 1
                 await websocket.send_json({
                     "type": "go_deeper",
                     "data": {
-                        "step": step_number,
                         "directory": event.directory,
                         "reason": event.reason,
+                        "step": step_number
                     }
                 })
                 
             elif isinstance(event, AskHumanEvent):
-                step_number += 1
+                print("DEBUG: Streaming AskHumanEvent", flush=True)
                 await websocket.send_json({
                     "type": "ask_human",
                     "data": {
-                        "step": step_number,
                         "question": event.question,
                         "reason": event.reason,
                     }
@@ -180,23 +186,26 @@ async def websocket_explore(websocket: WebSocket):
                 
                 # Wait for human response
                 response_data = await websocket.receive_json()
-                if response_data.get("type") == "human_response":
-                    handler.ctx.send_event(
-                        HumanAnswerEvent(response=response_data.get("response", ""))
-                    )
+                print(f"DEBUG: Received human response: {response_data}", flush=True)
+                handler.ctx.send_event(
+                    HumanAnswerEvent(response=response_data.get("response", ""))
+                )
         
         # Get final result
+        print("DEBUG: Awaiting final result...", flush=True)
         result = await handler
+        print(f"DEBUG: Final result received: {result}", flush=True)
         
         # Get token usage
         usage = agent.token_usage
         input_cost, output_cost, total_cost = usage._calculate_cost()
         
+        print("DEBUG: Sending completion message...", flush=True)
         await websocket.send_json({
             "type": "complete",
             "data": {
-                "final_result": result.final_result,
-                "error": result.error,
+                "final_result": getattr(result, "final_result", None),
+                "error": getattr(result, "error", None),
                 "stats": {
                     "steps": step_number,
                     "api_calls": usage.api_calls,
@@ -210,16 +219,22 @@ async def websocket_explore(websocket: WebSocket):
                 }
             }
         })
+        print("DEBUG: Completion message sent.", flush=True)
+        
+        # Graceful shutdown delay
+        await asyncio.sleep(0.5)
         
     except WebSocketDisconnect:
+        print("DEBUG: WebSocket disconnected by client.", flush=True)
         pass
     except Exception as e:
+        print(f"DEBUG: Server error: {e}", flush=True)
         import traceback
         traceback.print_exc()
         try:
             await websocket.send_json({
                 "type": "error",
-                "data": {"message": str(e)}
+                "data": {"message": f"Server error: {str(e)}"}
             })
         except:
             pass

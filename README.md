@@ -1,165 +1,89 @@
-# Agentic File Search
+# FsExplorer — Agentic File Search
 
-> **Based on**: [run-llama/fs-explorer](https://github.com/run-llama/fs-explorer) — The original CLI agent for filesystem exploration.
+> **An AI-powered document intelligence agent that explores your filesystem, parsing PDFs and answering complex questions with citations.**
 
-An AI-powered document search agent that explores files like a human would — scanning, reasoning, and following cross-references. Unlike traditional RAG systems that rely on pre-computed embeddings, this agent dynamically navigates documents to find answers.
+![UI Screenshot](assets/ui_screenshot.png)
 
-## Why Agentic Search?
+## 🚀 Key Features
 
-Traditional RAG (Retrieval-Augmented Generation) has limitations:
-- **Chunks lose context** — Splitting documents destroys relationships between sections
-- **Cross-references are invisible** — "See Exhibit B" means nothing to embeddings
-- **Similarity ≠ Relevance** — Semantic matching misses logical connections
+*   **Intelligent Exploration**: Unlike traditional RAG, FsExplorer navigates folders, follows cross-references ("See Exhibit B"), and actively searches for answers.
+*   **Deep Document Understanding**:
+    *   **PDF & OCR**: Powered by `Docling`, `Tesseract`, and `Poppler` to read scanned documents and complex PDFs.
+    *   **Multi-format**: Supports DOCX, PPTX, XLSX, HTML, Markdown, and source code.
+*   **Modern Web UI**: A beautiful, glassmorphic interface with:
+    *   Real-time execution logs (streaming WebSocket).
+    *   Step-by-step reasoning visualization.
+    *   Clean, cited final answers.
+*   **Dockerized Deployment**: Fully containerized environment with all system dependencies pre-installed.
+*   **Cost Effective**: Uses Google Gemini 3 Flash for high speed and low cost (~$0.001 per query).
 
-This system uses a **three-phase strategy**:
-1. **Parallel Scan** — Preview all documents in a folder at once
-2. **Deep Dive** — Full extraction on relevant documents only
-3. **Backtrack** — Follow cross-references to previously skipped documents
+## 🛠️ Tech Stack
 
-## Features
+*   **AI Core**: Google Gemini 3 Flash (via `google-genai` SDK)
+*   **Orchestration**: LlamaIndex Workflows (Event-driven architecture)
+*   **Parsing**: Docling + Tesseract OCR
+*   **Backend**: FastAPI + WebSockets
+*   **Frontend**: Vanilla JS + CSS (Glassmorphism design)
+*   **Infrastructure**: Docker + Docker Compose
 
-- 🔍 **6 Tools**: `scan_folder`, `preview_file`, `parse_file`, `read`, `grep`, `glob`
-- 📄 **Document Support**: PDF, DOCX, PPTX, XLSX, HTML, Markdown (via Docling)
-- 🤖 **Powered by**: Google Gemini 3 Flash with structured JSON output
-- 💰 **Cost Efficient**: ~$0.001 per query with token tracking
-- 🌐 **Web UI**: Real-time WebSocket streaming interface
-- 📊 **Citations**: Answers include source references
+## 📦 Installation
 
-## Installation
+### Prerequisites
 
-```bash
-# Clone the repository
-git clone https://github.com/PromtEngineer/agentic-file-search.git
-cd agentic-file-search
+*   **Docker** and **Docker Compose** installed.
+*   A **Google Gemini API Key** (Get one [here](https://aistudio.google.com/apikey)).
 
-# Install with uv (recommended)
-uv pip install .
+### Quick Start (Docker)
 
-# Or with pip
-pip install .
-```
+1.  **Clone the repository**:
+    ```bash
+    git clone https://github.com/Taveren7/agentic-file-search-pro.git
+    cd agentic-file-search-pro
+    ```
 
-## Configuration
+2.  **Configure Environment**:
+    Create a `.env` file in the root directory:
+    Or simply rename the `.env.example` file to `.env` and fill in the values.
+    ```bash
+    GOOGLE_API_KEY=your_actual_api_key_here
+    ```
 
-Create a `.env` file in the project root:
+3.  **Run with Docker**:
+    ```bash
+    docker-compose up --build
+    ```
+    *Note: The first build may take a few minutes to compile OCR dependencies.*
 
-```bash
-GOOGLE_API_KEY=your_api_key_here
-```
+4.  **Access the UI**:
+    Open your browser to: **http://localhost:8000**
 
-Get your API key from [Google AI Studio](https://aistudio.google.com/apikey).
+## 📖 Usage Guide
 
-## Usage
+### Using the Web UI
 
-### CLI
+1.  **Select Target**: Use the folder picker to select the directory you want to analyze (Docker mounts the current directory to `/app` by default).
+2.  **Ask a Question**:
+    *   *Simple*: "Summarize the NDA in the contracts folder."
+    *   *Complex*: "Compare the payment terms in the detailed design doc vs the final invoice."
+3.  **Watch it Work**: The agent will scan, preview, and deep-dive into files. It may even ask you follow-up questions if it gets stuck!
 
-```bash
-# Basic query
-uv run explore --task "What is the purchase price in data/test_acquisition/?"
+### CLI Mode (Optional)
 
-# Multi-document query
-uv run explore --task "Look in data/large_acquisition/. What are all the financial terms including adjustments and escrow?"
-```
-
-### Web UI
-
-```bash
-# Start the server
-uv run uvicorn fs_explorer.server:app --host 127.0.0.1 --port 8000
-
-# Open http://127.0.0.1:8000 in your browser
-```
-
-The web UI provides:
-- Folder browser to select target directory
-- Real-time step-by-step execution log
-- Final answer with citations
-- Token usage and cost statistics
-
-## Architecture
-
-```
-User Query
-    ↓
-┌─────────────────┐
-│ Workflow Engine │ ←→ LlamaIndex Workflows (event-driven)
-└────────┬────────┘
-         ↓
-┌─────────────────┐
-│     Agent       │ ←→ Gemini 3 Flash (structured JSON)
-└────────┬────────┘
-         ↓
-┌─────────────────────────────────────────┐
-│ scan_folder │ preview │ parse │ read │ grep │ glob │
-└─────────────────────────────────────────┘
-                    ↓
-              Document Parser (Docling - local)
-```
-
-See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed diagrams.
-
-## Test Documents
-
-The repo includes test document sets for evaluation:
-
-- `data/test_acquisition/` — 10 interconnected legal documents
-- `data/large_acquisition/` — 25 documents with extensive cross-references
-
-Example queries:
-```bash
-# Simple (single doc)
-uv run explore --task "Look in data/test_acquisition/. Who is the CTO?"
-
-# Cross-reference required
-uv run explore --task "Look in data/test_acquisition/. What is the adjusted purchase price?"
-
-# Multi-document synthesis
-uv run explore --task "Look in data/large_acquisition/. What happens to employees after the acquisition?"
-```
-
-## Tech Stack
-
-| Component | Technology |
-|-----------|------------|
-| LLM | Google Gemini 3 Flash |
-| Document Parsing | Docling (local, open-source) |
-| Orchestration | LlamaIndex Workflows |
-| CLI | Typer + Rich |
-| Web Server | FastAPI + WebSocket |
-| Package Manager | uv |
-
-## Project Structure
-
-```
-src/fs_explorer/
-├── agent.py      # Gemini client, token tracking
-├── workflow.py   # LlamaIndex workflow engine
-├── fs.py         # File tools: scan, parse, grep
-├── models.py     # Pydantic models for actions
-├── main.py       # CLI entry point
-├── server.py     # FastAPI + WebSocket server
-└── ui.html       # Single-file web interface
-```
-
-## Development
+You can also run the agent directly from the command line if you have `uv` installed:
 
 ```bash
-# Install dev dependencies
-uv pip install -e ".[dev]"
-
-# Run tests
-uv run pytest
-
-# Lint
-uv run ruff check .
+uv run explore --task "Find all deadlines in the project_plan.pdf"
 ```
 
-## License
+## 🔧 Troubleshooting
 
-MIT
+*   **"Connection failed"**: Ensure the Docker container is running (`docker-compose ps`).
+*   **PDF Parsing Errors**: If you see missing library errors, ensure you rebuilt the container (`docker-compose up --build`) which installs `libGL` and `poppler`.
 
-## Acknowledgments
+## 📜 License
 
-- Original concept from [run-llama/fs-explorer](https://github.com/run-llama/fs-explorer)
-- Document parsing by [Docling](https://github.com/DS4SD/docling)
-- Powered by [Google Gemini](https://deepmind.google/technologies/gemini/)
+MIT License. See [LICENSE](LICENSE) for details.
+
+---
+
+*Based on the original [fs-explorer](https://github.com/run-llama/fs-explorer) concept by LlamaIndex.*
