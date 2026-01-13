@@ -11,7 +11,10 @@ import glob as glob_module
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-from docling.document_converter import DocumentConverter
+import sqlite3
+import threading
+from docling.document_converter import DocumentConverter, PdfFormatOption
+from docling.datamodel.pipeline_options import PdfPipelineOptions
 
 
 # =============================================================================
@@ -33,10 +36,50 @@ DEFAULT_MAX_WORKERS = 4  # Thread pool size for parallel document scanning
 
 
 # =============================================================================
-# Document Cache
+# Document Cache & Converter
 # =============================================================================
 
-# Cache for parsed documents to avoid re-parsing
+# Persistent cache database path
+CACHE_DB_PATH = os.path.join(os.getcwd(), "doc_cache.db")
+
+# Singleton converter instance to avoid heavy re-initialization
+_CONVERTER: DocumentConverter | None = None
+_CONVERTER_LOCK = threading.Lock()
+
+def get_converter() -> DocumentConverter:
+    """Get or initialize the global DocumentConverter instance."""
+    global _CONVERTER
+    if _CONVERTER is None:
+        with _CONVERTER_LOCK:
+            if _CONVERTER is None:
+                # Configure OCR based on environment variable
+                no_ocr = os.getenv("FS_EXPLORER_NO_OCR", "").lower() in ("true", "1", "yes")
+                pipeline_options = PdfPipelineOptions()
+                pipeline_options.do_ocr = not no_ocr
+                
+                _CONVERTER = DocumentConverter(
+                    format_options={
+                        "pdf": PdfFormatOption(pipeline_options=pipeline_options)
+                    }
+                )
+    return _CONVERTER
+
+def _init_db():
+    """Initialize the SQLite cache database."""
+    with sqlite3.connect(CACHE_DB_PATH) as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS document_cache (
+                path TEXT PRIMARY KEY,
+                mtime REAL,
+                content TEXT
+            )
+        """)
+        conn.commit()
+
+# Initialize DB on module load
+_init_db()
+
+# In-memory cache for ultra-fast access within a session
 _DOCUMENT_CACHE: dict[str, str] = {}
 
 
@@ -50,25 +93,51 @@ def _get_cached_or_parse(file_path: str) -> str:
     Get document content from cache or parse it.
     
     Uses file modification time in cache key to invalidate stale entries.
+    Check priorities:
+    1. In-memory cache (_DOCUMENT_CACHE)
+    2. Persistent SQLite cache (doc_cache.db)
+    3. Fresh parse with Docling
     
     Args:
         file_path: Path to the document file.
     
     Returns:
         The document content as markdown.
-    
-    Raises:
-        Exception: If the document cannot be parsed.
     """
     abs_path = os.path.abspath(file_path)
-    cache_key = f"{abs_path}:{os.path.getmtime(abs_path)}"
+    mtime = os.path.getmtime(abs_path)
+    cache_key = f"{abs_path}:{mtime}"
     
-    if cache_key not in _DOCUMENT_CACHE:
-        converter = DocumentConverter()
-        result = converter.convert(file_path)
-        _DOCUMENT_CACHE[cache_key] = result.document.export_to_markdown()
+    # 1. Check in-memory cache
+    if cache_key in _DOCUMENT_CACHE:
+        return _DOCUMENT_CACHE[cache_key]
     
-    return _DOCUMENT_CACHE[cache_key]
+    # 2. Check SQLite cache
+    with sqlite3.connect(CACHE_DB_PATH) as conn:
+        row = conn.execute(
+            "SELECT content FROM document_cache WHERE path = ? AND mtime = ?", 
+            (abs_path, mtime)
+        ).fetchone()
+        if row:
+            content = row[0]
+            _DOCUMENT_CACHE[cache_key] = content
+            return content
+            
+    # 3. Parse and cache
+    converter = get_converter()
+    result = converter.convert(file_path)
+    content = result.document.export_to_markdown()
+    
+    # Update both caches
+    _DOCUMENT_CACHE[cache_key] = content
+    with sqlite3.connect(CACHE_DB_PATH) as conn:
+        conn.execute(
+            "INSERT OR REPLACE INTO document_cache (path, mtime, content) VALUES (?, ?, ?)",
+            (abs_path, mtime, content)
+        )
+        conn.commit()
+    
+    return content
 
 
 # =============================================================================
