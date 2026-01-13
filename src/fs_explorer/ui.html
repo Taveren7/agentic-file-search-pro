@@ -49,10 +49,26 @@
         /* Glassmorphism utility */
         .glass {
             background: var(--bg-card);
-            backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px);
             border: 1px solid var(--border);
             border-radius: 16px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .text-error {
+            color: var(--error);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+        }
+
+        .animate-pulse {
+            animation: pulse 1.5s infinite;
         }
 
         /* Layout */
@@ -240,6 +256,7 @@
             font-weight: 700;
             background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -538,6 +555,7 @@
             position: fixed;
             inset: 0;
             background: rgba(0, 0, 0, 0.8);
+            -webkit-backdrop-filter: blur(8px);
             backdrop-filter: blur(8px);
             display: flex;
             align-items: center;
@@ -748,7 +766,7 @@
                     </div>
                 </div>
 
-                <div class="stats-grid" id="statsGrid" style="display: none;">
+                <div class="stats-grid hidden" id="statsGrid">
                     <div class="stat-item">
                         <span class="stat-value" id="statSteps">0</span>
                         <span class="stat-label">Steps</span>
@@ -798,7 +816,7 @@
             <h2 class="modal-title">Select Directory</h2>
             <div class="modal-body">
                 <div class="folder-nav-bar">
-                    <button class="btn-browse" id="folderUpBtn" onclick="navigateUp()" style="padding: 6px 12px;">↑
+                    <button class="btn-browse btn-small" id="folderUpBtn" onclick="navigateUp()">↑
                         Up</button>
                     <div class="folder-current-path" id="folderModalPath">.</div>
                 </div>
@@ -867,8 +885,8 @@
 
             // Reset UI
             stepsList.innerHTML = '<div class="empty-state"><p>Initializing agent...</p></div>';
-            resultContent.innerHTML = '<div class="empty-state"><div class="empty-icon" style="animation: pulse 1.5s infinite">✧</div><p>Searching documents...</p></div>';
-            statsGrid.style.display = 'none';
+            resultContent.innerHTML = '<div class="empty-state"><div class="empty-icon animate-pulse">✧</div><p>Searching documents...</p></div>';
+            statsGrid.classList.add('hidden');
             progressContainer.classList.add('active', 'indet');
             stepCountBadge.textContent = '0 STEPS';
 
@@ -964,7 +982,7 @@
 
             const s = data.stats;
             if (s) {
-                statsGrid.style.display = 'grid';
+                statsGrid.classList.remove('hidden');
                 document.getElementById('statSteps').textContent = s.steps;
                 document.getElementById('statScanned').textContent = s.documents_scanned;
                 document.getElementById('statParsed').textContent = s.documents_parsed;
@@ -986,8 +1004,8 @@
         function showError(msg) {
             resultContent.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-icon" style="color: var(--error); opacity: 1">⚠</div>
-                    <p style="color: var(--error)">${esc(msg)}</p>
+                    <div class="empty-icon text-error" style="opacity: 1">⚠</div>
+                    <p class="text-error">${esc(msg)}</p>
                 </div>
             `;
             updateStatus('Execution Error', 'active');
@@ -1035,7 +1053,7 @@
                 const data = await res.json();
 
                 if (data.error) {
-                    folderList.innerHTML = `<div class="empty-state" style="color: var(--error)"><p>${esc(data.error)}</p></div>`;
+                    folderList.innerHTML = `<div class="empty-state text-error"><p>${esc(data.error)}</p></div>`;
                     return;
                 }
 
@@ -1054,7 +1072,7 @@
                     `).join('');
                 }
             } catch (e) {
-                folderList.innerHTML = `<div class="empty-state" style="color: var(--error)"><p>Failed to load folder.</p></div>`;
+                folderList.innerHTML = `<div class="empty-state text-error"><p>Failed to load folder.</p></div>`;
             }
         }
 
