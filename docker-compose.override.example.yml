@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  app:
+    volumes:
+      # -----------------------------------------------------------------------
+      # 🔌 MOUNT YOUR FOLDERS HERE
+      # -----------------------------------------------------------------------
+      #
+      # UNCOMMENT the lines below and change the paths to match your system.
+      # The format is: - /path/on/your/computer:/app/external_data/Folder_Name
+      #
+      # 🍎 MACOS / LINUX EXAMPLES:
+      # - /Users/me/Documents/Work:/app/external_data/Work
+      # - /Volumes/SharedDrive/Project:/app/external_data/Project_X
+      #
+      # 🪟 WINDOWS EXAMPLES:
+      # - C:\Users\me\Desktop\Finance:/app/external_data/Finance
+      # - D:\Archive:/app/external_data/Archive_Drive
+      #
+      # -----------------------------------------------------------------------
+      
+      # Example (Uncomment to use):
+      # - /Users/tec/Documents/Contracts:/app/external_data/Contracts

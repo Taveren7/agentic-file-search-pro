@@ -72,6 +72,31 @@ To explore folders outside of the project directory (e.g., your Documents or a s
 2.  **Restart**: Run `docker-compose up -d`.
 3.  **Explore**: In the Web UI, you will see a folder named **`external_data`**. Open it to search your host files!
 
+### 🔌 Connecting Multiple External Drives (Advanced)
+
+To mount **multiple** folders (e.g., your "Work" folder, a "Personal" drive, and a "Network Share") at the same time:
+
+1.  **Create an Override File**:
+    Copy the example file:
+    ```bash
+    cp docker-compose.override.example.yml docker-compose.override.yml
+    ```
+    *(Note: Docker automatically looks for `docker-compose.override.yml` and merges it with the main config.)*
+
+2.  **Edit the File**:
+    Open `docker-compose.override.yml` and uncomment/add your paths under `volumes`:
+    ```yaml
+    volumes:
+      - /Users/me/Documents/Work:/app/external_data/Work_Docs
+      - /Volumes/TeamShare/Q4_Reports:/app/external_data/Q4_Reports
+    ```
+
+3.  **Restart**:
+    ```bash
+    docker-compose up -d
+    ```
+    You will now see `Work_Docs` and `Q4_Reports` as subfolders inside `external_data`.
+
 ### 🛑 Stopping the App
 
 To stop the background containers, run:
@@ -103,37 +128,34 @@ uv run explore --task "Find all deadlines in the project_plan.pdf"
 *   **PDF Parsing Errors**: If you see missing library errors, ensure you rebuilt the container (`docker-compose up --build`) which installs `libGL` and `poppler`.
 
 
-### Why Agentic File Search?
+### 🆚 Comparisons: Why FsExplorer?
 
-The difference between a Traditional RAG (Retrieval-Augmented Generation) system and Agentic File Search (like this project) lies primarily in autonomy and contextual awareness.
+#### 1. FsExplorer vs. Traditional RAG
+Standard RAG (Retrieval-Augmented Generation) is a **"Search Engine"**:
+*   **Process**: Vector Search → Retrieve Chunks → Summarize.
+*   **Weakness**: It "chunks" files, losing context. If a contract says *"See Exhibit B for pricing"*, RAG won't know to go find Exhibit B unless it also matches your search keywords.
+*   **Best For**: Sub-second answers from millions of simple docs.
 
-Think of it as the difference between a Search Engine (Traditional RAG) and a Research Assistant (Agentic Search).
+FsExplorer is a **"Research Assistant"**:
+*   **Process**: Parallel Scan → Deep Dive → **Backtrack**.
+*   **Strength**: It behaves like a human. It opens a folder, scans file names, reads a document, *notices a cross-reference*, and **actively backtracks** to open the referenced file.
+*   **Best For**: Complex analysis of legal contracts, codebases, or research papers where relationships between files matter.
 
+#### 2. FsExplorer vs. Coding Agents (OpenCode, Cursor, etc.)
+General-purpose coding agents are designed to **write code**. FsExplorer is designed to **conduct research**.
 
-1. Traditional RAG: The "Store and Fetch" Model
-Traditional RAG relies on a "black box" retrieval mechanism. You index your files into a vector database ahead of time. When you ask a question:
+| Feature | Coding Agents (OpenCode/Cursor) | FsExplorer (This Agent) |
+| :--- | :--- | :--- |
+| **Primary Goal** | Write/Edit Code & Fix Bugs | **Answer Questions & Synthesize Data** |
+| **Citation Style** | Loose ("In the utils file...") | **Strict** (`[Source: utils.py, Line 45]`) |
+| **Parsing** | Text-based (Code-focused) | **Docling-powered** (OCR for PDFs, Tables in DOCX) |
+| **Token Tracking** | Opaque / Hidden | **Transparent** (Real-time $$$ cost per query) |
+| **Architecture** | Linear / ReAct Loop | **State Machine** (Scan → Deep Dive → Backtrack) |
 
-The system converts your prompt into a math vector.
-It pulls the chunks of text that are most mathematically similar.
-It hands those chunks to the LLM to summarize.
-The Weakness: If the answer depends on a cross-reference (e.g., a contract that says "Pricing is defined in the Appendix"), the vector database might not realize the Appendix is relevant because it doesn't "understand" the text—it just sees that the Appendix doesn't mention the word "Pricing."
-
-2. Agentic File Search: The "Browse and Read" Model
-The agentic approach mimics how a human works. Instead of a fixed index, it has a high-level "strategy":
-
-Explore: It starts by listing files in a directory.
-Prioritize: It uses 
-scan_folder
- to categorize files (RELEVANT, MAYBE, SKIP).
-Deep Dive: It uses 
-parse_file
- to read the most promising documents.
-Follow Links: If a document mentions another file, it can backtrack—deciding to stop what it's doing and open that newly discovered file.
-The Strength: It is far more precise for complex questions. It doesn't just find "similar" text; it builds a mental map of the folder structure and document relationships to find the correct text.
-
-Which one to choose?
-Use Traditional RAG if you have millions of documents and need sub-second answers to simple questions.
-Use Agentic Search (this project) if you have hundreds of documents (like a legal folder or project repo) and need high-accuracy answers where context and document relationships matter most.
+### 🏆 Pro-Level Research Features
+*   **Strict Citations**: Every claim is backed by a specific source: *"The fee is $500 [Source: contract.pdf, Section 4]"*.
+*   **Real-Time Token Auditing**: The agent calculates and displays the exact cost of every query (e.g., *"$0.012"*) so you can manage your budget.
+*   **Visual Logic**: Watch the agent's "brain" work in the UI as it decides to *SKIP* irrelevant files or *DEEP DIVE* into promising ones.
 
 ## 📜 License
 
